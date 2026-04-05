@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory, createWebHistory } from 'vue-router'
 import DashboardPage from '@/pages/DashboardPage.vue'
 import DoctorsPage from '@/pages/DoctorsPage.vue'
 import PatientsPage from '@/pages/PatientsPage.vue'
@@ -16,7 +16,9 @@ import LoginPage from '@/pages/LoginPage.vue'
 import RegisterPage from '@/pages/RegisterPage.vue'
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: import.meta.env.PROD
+    ? createWebHashHistory(import.meta.env.BASE_URL)
+    : createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',

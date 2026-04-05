@@ -123,7 +123,7 @@ bun run build
 
 The generated files will be in `dist/`. Point your hosting provider at that folder and make sure SPA rewrites are enabled so Vue Router can handle deep links such as `/patients` or `/login`.
 
-For GitHub Pages, the project is already configured with a production base path of `/hms-project/` and a fallback `404.html` so direct page refreshes keep working.
+For GitHub Pages, the project is configured for the repository path `/Vue_HMS_frontend/` and uses hash routing in production so direct page refreshes keep working without a custom server rewrite.
 
 Before deploying, set the production API URL in the host environment variables:
 

@@ -4,7 +4,7 @@ import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig(({ mode }) => ({
-  base: mode === 'production' ? '/hms-project/' : '/',
+  base: mode === 'production' ? '/Vue_HMS_frontend/hms-project' : '/',
   plugins: [tailwindcss(), vue()],
   resolve: {
     alias: {
