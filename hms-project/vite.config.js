@@ -3,8 +3,8 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import tailwindcss from '@tailwindcss/vite'
 
-export default defineConfig(({ mode }) => ({
-  base: mode === 'production' ? '/Vue_HMS_frontend/hms-project' : '/',
+export default defineConfig(({ command }) => ({
+  base: command === 'build' ? '/Vue_HMS_frontend/' : '/',
   plugins: [tailwindcss(), vue()],
   resolve: {
     alias: {
