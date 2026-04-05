@@ -112,3 +112,33 @@ Current page-to-endpoint mapping follows the same pattern across the app:
 - The dashboard shell is shown for normal routes, while `/login` and `/register` render as auth pages.
 - The app is intended for local development against the backend API; no manual push step is required to run it locally.
 - If you change the backend response shape, update the matching page mapping logic so the tables stay aligned with the API.
+
+## Hosting
+
+This project can be hosted as a static frontend after you run the production build:
+
+```sh
+bun run build
+```
+
+The generated files will be in `dist/`. Point your hosting provider at that folder and make sure SPA rewrites are enabled so Vue Router can handle deep links such as `/patients` or `/login`.
+
+For GitHub Pages, the project is already configured with a production base path of `/hms-project/` and a fallback `404.html` so direct page refreshes keep working.
+
+Before deploying, set the production API URL in the host environment variables:
+
+```env
+VITE_API_BASE_URL=https://your-backend-domain.example/api
+```
+
+Recommended hosting targets:
+
+- Netlify
+- Vercel
+- Cloudflare Pages
+- Nginx on your own server
+- GitHub Pages
+
+GitHub Pages deployment is automated through `.github/workflows/deploy.yml`. Push to `main`, or run the workflow manually, and GitHub Actions will build the app from `hms-project/` and publish the `dist/` output.
+
+If you want, I can also add platform-specific deployment files for Netlify or Vercel.
