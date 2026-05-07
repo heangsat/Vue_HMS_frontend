@@ -1,5 +1,6 @@
 <script setup>
 import { computed, ref, watch } from 'vue'
+import { CirclePlus, Filter, PencilLine, Search, Trash2 } from 'lucide-vue-next'
 
 const props = defineProps({
   title: { type: String, required: true },
@@ -17,6 +18,13 @@ const form = ref({})
 const editingRow = ref(null)
 const submitError = ref('')
 const saving = ref(false)
+
+const summaryCards = computed(() => [
+  { label: 'Total Rows', value: rows.value.length },
+  { label: 'Shown Rows', value: filteredRows.value.length },
+  { label: 'Columns', value: props.columns.length },
+  { label: 'Required Fields', value: props.columns.filter((column) => column.required).length },
+])
 
 const resetForm = () => {
   const next = {}
@@ -59,6 +67,8 @@ const filteredRows = computed(() => {
     props.columns.some((column) => String(row[column.key] ?? '').toLowerCase().includes(keyword)),
   )
 })
+
+const totalFields = computed(() => props.columns.length)
 
 const getInputType = (column) => {
   if (column.type === 'number') return 'number'
@@ -148,44 +158,71 @@ const cancelEdit = () => {
   resetForm()
   showForm.value = false
 }
+
+const formatValue = (value) => {
+  if (value === null || value === undefined || value === '') return '-'
+  return value
+}
 </script>
 
 <template>
-  <section class="space-y-4">
-    <div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-      <div>
-        <h2 class="text-2xl font-bold text-slate-800">{{ title }}</h2>
-        <p v-if="description" class="text-sm text-slate-500">{{ description }}</p>
+  <section class="space-y-5">
+    <header class="rounded-xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
+      <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 class="text-2xl font-semibold text-slate-900">{{ title }}</h2>
+          <p v-if="description" class="mt-1 text-sm text-slate-600">{{ description }}</p>
+        </div>
+
+        <div class="flex w-full flex-col gap-2 sm:flex-row md:w-auto">
+          <label
+            class="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-500"
+          >
+            <Search class="h-4 w-4" />
+            <input
+              v-model="search"
+              type="text"
+              placeholder="Search rows..."
+              class="w-full bg-transparent text-slate-700 placeholder:text-slate-400 focus:outline-none sm:w-52"
+            />
+          </label>
+          <button
+            type="button"
+            class="inline-flex items-center justify-center gap-1 rounded-lg border border-indigo-100 bg-indigo-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-indigo-700"
+            @click="showForm = !showForm"
+          >
+            <CirclePlus class="h-4 w-4" />
+            {{ showForm ? 'Close Form' : 'Add Row' }}
+          </button>
+        </div>
       </div>
 
-      <div class="flex flex-col gap-2 sm:flex-row">
-        <input
-          v-model="search"
-          type="text"
-          placeholder="Search rows..."
-          class="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none sm:w-56"
-        />
-        <button
-          type="button"
-          class="rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700"
-          @click="showForm = !showForm"
+      <div class="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <article
+          v-for="card in summaryCards"
+          :key="card.label"
+          class="rounded-lg border border-slate-200 bg-white px-3 py-2"
         >
-          {{ showForm ? 'Close Form' : 'Add Row' }}
-        </button>
+          <p class="text-xs text-slate-500">{{ card.label }}</p>
+          <p class="text-base font-semibold text-slate-900">{{ card.value }}</p>
+        </article>
       </div>
-    </div>
+    </header>
 
     <form
       v-if="showForm"
-      class="grid grid-cols-1 gap-3 rounded-lg border border-slate-200 bg-white p-4 md:grid-cols-3"
+      class="grid grid-cols-1 gap-3 rounded-xl border border-slate-200 bg-white p-4 md:grid-cols-3"
       @submit.prevent="addRow"
     >
       <label v-for="column in columns" :key="column.key" class="flex flex-col gap-1 text-sm text-slate-700">
-        {{ column.label }}
+        <span class="inline-flex items-center gap-1">
+          {{ column.label }}
+          <span v-if="column.required" class="text-rose-500">*</span>
+        </span>
         <select
           v-if="column.options?.length"
           v-model="form[column.key]"
-          class="rounded-md border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+          class="rounded-lg border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
           :required="column.required"
         >
           <option disabled value="">Select {{ column.label }}</option>
@@ -196,43 +233,54 @@ const cancelEdit = () => {
           v-else
           v-model="form[column.key]"
           :type="getInputType(column)"
-          class="rounded-md border border-slate-300 px-3 py-2 focus:border-blue-500 focus:outline-none"
+          class="rounded-lg border border-slate-300 px-3 py-2 focus:border-indigo-500 focus:outline-none"
           :required="column.required"
         />
       </label>
 
       <div class="md:col-span-3">
         <p v-if="submitError" class="mb-2 text-sm text-rose-600">{{ submitError }}</p>
-        <button
-          type="submit"
-          :disabled="saving"
-          class="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
-        >
-          {{ saving ? 'Saving...' : editingRow ? 'Update Row' : 'Save Row' }}
-        </button>
-        <button
-          v-if="editingRow"
-          type="button"
-          class="ml-2 rounded-md bg-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-300"
-          @click="cancelEdit"
-        >
-          Cancel
-        </button>
+        <div class="flex flex-wrap items-center gap-2">
+          <button
+            type="submit"
+            :disabled="saving"
+            class="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+          >
+            {{ saving ? 'Saving...' : editingRow ? 'Update Row' : 'Save Row' }}
+          </button>
+          <button
+            v-if="editingRow"
+            type="button"
+            class="rounded-lg bg-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-300"
+            @click="cancelEdit"
+          >
+            Cancel
+          </button>
+          <span class="text-xs text-slate-500">Required inputs: {{ columns.filter((column) => column.required).length }} / {{ totalFields }}</span>
+        </div>
       </div>
     </form>
 
-    <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white shadow-sm">
+    <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+      <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-2">
+        <p class="text-sm font-semibold text-slate-700">Records</p>
+        <span class="inline-flex items-center gap-1 text-xs text-slate-500">
+          <Filter class="h-3.5 w-3.5" />
+          Showing {{ filteredRows.length }} of {{ rows.length }}
+        </span>
+      </div>
+      <div class="overflow-x-auto">
       <table class="min-w-full divide-y divide-slate-200 text-sm">
-        <thead class="bg-slate-100 text-left">
+        <thead class="bg-white text-left">
           <tr>
             <th
               v-for="column in columns"
               :key="column.key"
-              class="whitespace-nowrap px-4 py-3 font-semibold text-slate-700"
+              class="whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500"
             >
               {{ column.label }}
             </th>
-            <th class="px-4 py-3 font-semibold text-slate-700">Actions</th>
+            <th class="px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">Actions</th>
           </tr>
         </thead>
 
@@ -243,33 +291,40 @@ const cancelEdit = () => {
             </td>
           </tr>
 
-          <tr v-for="(row, index) in filteredRows" :key="`${row[primaryKey] ?? index}-${index}`">
+          <tr
+            v-for="(row, index) in filteredRows"
+            :key="`${row[primaryKey] ?? index}-${index}`"
+            class="hover:bg-slate-50"
+          >
             <td
               v-for="column in columns"
               :key="column.key"
               class="whitespace-nowrap px-4 py-3 text-slate-700"
             >
-              {{ row[column.key] }}
+              {{ formatValue(row[column.key]) }}
             </td>
             <td class="px-4 py-3">
               <button
                 type="button"
-                class="mr-2 rounded-md bg-sky-100 px-2 py-1 text-xs font-semibold text-sky-700 hover:bg-sky-200"
+                class="mr-2 inline-flex items-center gap-1 rounded-md bg-sky-100 px-2 py-1 text-xs font-semibold text-sky-700 hover:bg-sky-200"
                 @click="updateRow(row)"
               >
-                Update
+                <PencilLine class="h-3.5 w-3.5" />
+                Edit
               </button>
               <button
                 type="button"
-                class="rounded-md bg-rose-100 px-2 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-200"
+                class="inline-flex items-center gap-1 rounded-md bg-rose-100 px-2 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-200"
                 @click="removeRow(row)"
               >
+                <Trash2 class="h-3.5 w-3.5" />
                 Delete
               </button>
             </td>
           </tr>
         </tbody>
       </table>
+      </div>
     </div>
   </section>
 </template>
